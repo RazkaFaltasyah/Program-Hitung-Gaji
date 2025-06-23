@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Laporan Gaji</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
+    label, select, input { margin: 5px 0; display: block; }
+    .tukang-form { margin-bottom: 20px; background: #fff; padding: 10px; border-radius: 8px; }
+    #result { background: #fff; padding: 15px; margin-top: 20px; border-radius: 8px; }
+    button { margin-top: 10px; padding: 8px 12px; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<h2>Laporan Gaji</h2>
+
+<label>Tanggal:
+  <input type="date" id="tanggal" required>
+</label>
+
+<label>Proyek:
+  <select id="proyek">
+    <option value="Rumah A">Rumah A</option>
+    <option value="Rumah B">Rumah B</option>
+    <option value="Rumah C">Rumah C</option>
+  </select>
+</label>
+
+<label>Jumlah Tukang:
+  <input type="number" id="jumlahTukang" min="1" required>
+</label>
+
+<label>Jumlah Kenek:
+  <input type="number" id="jumlahKenek" min="0" required>
+</label>
+
+<button onclick="buatFormTukangDanKenek()">Isi</button>
+
+<div id="formTukangContainer"></div>
+<div id="formKenekContainer"></div>
+
+<button onclick="hitungGaji()">Hitung</button>
+
+<div id="result"></div>
+
+<button onclick="downloadPDF()">Download PDF</button>
+
+<script>
+  const gajiPerHariTukang = 150000;
+  const gajiPerHariKenek = 100000;
+  let hasilText = "";
+
+  function buatFormTukangDanKenek() {
+    // Tukang
+    const jumlahTukang = parseInt(document.getElementById('jumlahTukang').value) || 0;
+    const tukangContainer = document.getElementById('formTukangContainer');
+    tukangContainer.innerHTML = '';
+    for (let i = 1; i <= jumlahTukang; i++) {
+      const div = document.createElement('div');
+      div.className = 'tukang-form';
+      div.innerHTML = `
+        <h4>Tukang ${i}</h4>
+        <label>Nama Tukang:
+          <input type="text" id="namaTukang${i}" required>
+        </label>
+        <label>Hari Kerja:
+          <input type="number" id="hariTukang${i}" min="0.01" step="0.01" required>
+        </label>
+      `;
+      tukangContainer.appendChild(div);
+    }
+    // Kenek
+    const jumlahKenek = parseInt(document.getElementById('jumlahKenek').value) || 0;
+    const kenekContainer = document.getElementById('formKenekContainer');
+    kenekContainer.innerHTML = '';
+    for (let i = 1; i <= jumlahKenek; i++) {
+      const div = document.createElement('div');
+      div.className = 'tukang-form';
+      div.innerHTML = `
+        <h4>Kenek ${i}</h4>
+        <label>Nama Kenek:
+          <input type="text" id="namaKenek${i}" required>
+        </label>
+        <label>Hari Kerja:
+          <input type="number" id="hariKenek${i}" min="0.01" step="0.01" required>
+        </label>
+      `;
+      kenekContainer.appendChild(div);
+    }
+  }
+
+  function hitungGaji() {
+    const tanggal = document.getElementById('tanggal').value;
+    const proyek = document.getElementById('proyek').value;
+    const jumlahTukang = parseInt(document.getElementById('jumlahTukang').value) || 0;
+    const jumlahKenek = parseInt(document.getElementById('jumlahKenek').value) || 0;
+
+    hasilText = `LAPORAN GAJI TUKANG & KENEK\n`;
+    hasilText += `Tanggal: ${tanggal}\n`;
+    hasilText += `Proyek: ${proyek}\n`;
+    hasilText += `Jumlah Tukang: ${jumlahTukang}\n`;
+    hasilText += `Jumlah Kenek: ${jumlahKenek}\n\n`;
+
+    let total = 0;
+    hasilText += `No. | Nama              | Hari | Gaji (Rp)   | Keterangan\n`;
+    hasilText += `----|-------------------|------|-------------|-----------\n`;
+
+    let no = 1;
+    // Tukang
+    for (let i = 1; i <= jumlahTukang; i++) {
+      const nama = document.getElementById(`namaTukang${i}`).value;
+      const hari = parseFloat(document.getElementById(`hariTukang${i}`).value);
+      const gaji = hari * gajiPerHariTukang;
+      total += gaji;
+      hasilText += `${no.toString().padEnd(4)}| ${nama.padEnd(18)}| ${hari.toString().padEnd(5)}| Rp ${gaji.toLocaleString('id-ID').padEnd(11)}| Tukang\n`;
+      no++;
+    }
+    // Kenek
+    for (let i = 1; i <= jumlahKenek; i++) {
+      const nama = document.getElementById(`namaKenek${i}`).value;
+      const hari = parseFloat(document.getElementById(`hariKenek${i}`).value);
+      const gaji = hari * gajiPerHariKenek;
+      total += gaji;
+      hasilText += `${no.toString().padEnd(4)}| ${nama.padEnd(18)}| ${hari.toString().padEnd(5)}| Rp ${gaji.toLocaleString('id-ID').padEnd(11)}| Kenek\n`;
+      no++;
+    }
+
+    hasilText += `\nTOTAL GAJI: Rp ${total.toLocaleString('id-ID')}\n`;
+
+    document.getElementById('result').innerHTML = `<pre>${hasilText}</pre>`;
+  }
+
+  function downloadPDF() {
+    if (!hasilText) {
+      alert("Silakan hitung gaji dulu.");
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Ambil data dari form
+    const tanggal = document.getElementById('tanggal').value;
+    const proyek = document.getElementById('proyek').value;
+    const jumlahTukang = parseInt(document.getElementById('jumlahTukang').value) || 0;
+    const jumlahKenek = parseInt(document.getElementById('jumlahKenek').value) || 0;
+
+    // Header
+    doc.setFontSize(14);
+    doc.text("LAPORAN GAJI TUKANG & KENEK", 14, 15);
+    doc.setFontSize(11);
+    doc.text(`Tanggal: ${tanggal}`, 14, 25);
+    doc.text(`Proyek: ${proyek}`, 14, 32);
+    doc.text(`Jumlah Tukang: ${jumlahTukang}`, 14, 39);
+    doc.text(`Jumlah Kenek: ${jumlahKenek}`, 14, 46);
+
+    // Data tabel
+    const tableData = [];
+    let total = 0;
+    let no = 1;
+    // Tukang
+    for (let i = 1; i <= jumlahTukang; i++) {
+      const nama = document.getElementById(`namaTukang${i}`).value;
+      const hari = parseFloat(document.getElementById(`hariTukang${i}`).value);
+      const gaji = hari * gajiPerHariTukang;
+      total += gaji;
+      tableData.push([
+        no,
+        nama,
+        hari,
+        "Rp " + gaji.toLocaleString('id-ID'),
+        "Tukang"
+      ]);
+      no++;
+    }
+    // Kenek
+    for (let i = 1; i <= jumlahKenek; i++) {
+      const nama = document.getElementById(`namaKenek${i}`).value;
+      const hari = parseFloat(document.getElementById(`hariKenek${i}`).value);
+      const gaji = hari * gajiPerHariKenek;
+      total += gaji;
+      tableData.push([
+        no,
+        nama,
+        hari,
+        "Rp " + gaji.toLocaleString('id-ID'),
+        "Kenek"
+      ]);
+      no++;
+    }
+
+    // Tabel
+    doc.autoTable({
+      head: [['No.', 'Nama', 'Hari Kerja', 'Gaji (Rp)', 'Keterangan']],
+      body: tableData,
+      startY: 55,
+      styles: { font: "courier", fontSize: 11 }
+    });
+
+    // Total
+    const finalY = doc.lastAutoTable.finalY || 55;
+    doc.setFontSize(12);
+    doc.text(`TOTAL GAJI: Rp ${total.toLocaleString('id-ID')}`, 14, finalY + 10);
+
+    // Format tanggal ke ddmmyyyy
+    let fileTanggal = "tanpa-tanggal";
+    if (tanggal) {
+      const [yyyy, mm, dd] = tanggal.split("-");
+      fileTanggal = `${dd}${mm}${yyyy}`;
+    }
+    doc.save(`laporan-gaji-${fileTanggal}.pdf`);
+  }
+</script>
+
+</body>
+</html>
