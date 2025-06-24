@@ -21,12 +21,8 @@
   <input type="date" id="tanggal" required>
 </label>
 
-<label>Proyek:
-  <select id="proyek">
-    <option value="Rumah A">Rumah A</option>
-    <option value="Rumah B">Rumah B</option>
-    <option value="Rumah C">Rumah C</option>
-  </select>
+<label>Nama Proyek:
+  <input type="text" id="proyek" required>
 </label>
 
 <label>Jumlah Tukang:
@@ -54,7 +50,6 @@
   let hasilText = "";
 
   function buatFormTukangDanKenek() {
-    // Tukang
     const jumlahTukang = parseInt(document.getElementById('jumlahTukang').value) || 0;
     const tukangContainer = document.getElementById('formTukangContainer');
     tukangContainer.innerHTML = '';
@@ -72,7 +67,7 @@
       `;
       tukangContainer.appendChild(div);
     }
-    // Kenek
+
     const jumlahKenek = parseInt(document.getElementById('jumlahKenek').value) || 0;
     const kenekContainer = document.getElementById('formKenekContainer');
     kenekContainer.innerHTML = '';
@@ -104,12 +99,11 @@
     hasilText += `Jumlah Tukang: ${jumlahTukang}\n`;
     hasilText += `Jumlah Kenek: ${jumlahKenek}\n\n`;
 
-    let total = 0;
     hasilText += `No. | Nama              | Hari | Gaji (Rp)   | Keterangan\n`;
     hasilText += `----|-------------------|------|-------------|-----------\n`;
 
+    let total = 0;
     let no = 1;
-    // Tukang
     for (let i = 1; i <= jumlahTukang; i++) {
       const nama = document.getElementById(`namaTukang${i}`).value;
       const hari = parseFloat(document.getElementById(`hariTukang${i}`).value);
@@ -118,7 +112,7 @@
       hasilText += `${no.toString().padEnd(4)}| ${nama.padEnd(18)}| ${hari.toString().padEnd(5)}| Rp ${gaji.toLocaleString('id-ID').padEnd(11)}| Tukang\n`;
       no++;
     }
-    // Kenek
+
     for (let i = 1; i <= jumlahKenek; i++) {
       const nama = document.getElementById(`namaKenek${i}`).value;
       const hari = parseFloat(document.getElementById(`hariKenek${i}`).value);
@@ -141,13 +135,11 @@
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // Ambil data dari form
     const tanggal = document.getElementById('tanggal').value;
     const proyek = document.getElementById('proyek').value;
     const jumlahTukang = parseInt(document.getElementById('jumlahTukang').value) || 0;
     const jumlahKenek = parseInt(document.getElementById('jumlahKenek').value) || 0;
 
-    // Header
     doc.setFontSize(14);
     doc.text("LAPORAN GAJI TUKANG & KENEK", 14, 15);
     doc.setFontSize(11);
@@ -156,42 +148,27 @@
     doc.text(`Jumlah Tukang: ${jumlahTukang}`, 14, 39);
     doc.text(`Jumlah Kenek: ${jumlahKenek}`, 14, 46);
 
-    // Data tabel
     const tableData = [];
     let total = 0;
     let no = 1;
-    // Tukang
     for (let i = 1; i <= jumlahTukang; i++) {
       const nama = document.getElementById(`namaTukang${i}`).value;
       const hari = parseFloat(document.getElementById(`hariTukang${i}`).value);
       const gaji = hari * gajiPerHariTukang;
       total += gaji;
-      tableData.push([
-        no,
-        nama,
-        hari,
-        "Rp " + gaji.toLocaleString('id-ID'),
-        "Tukang"
-      ]);
+      tableData.push([no, nama, hari, "Rp " + gaji.toLocaleString('id-ID'), "Tukang"]);
       no++;
     }
-    // Kenek
+
     for (let i = 1; i <= jumlahKenek; i++) {
       const nama = document.getElementById(`namaKenek${i}`).value;
       const hari = parseFloat(document.getElementById(`hariKenek${i}`).value);
       const gaji = hari * gajiPerHariKenek;
       total += gaji;
-      tableData.push([
-        no,
-        nama,
-        hari,
-        "Rp " + gaji.toLocaleString('id-ID'),
-        "Kenek"
-      ]);
+      tableData.push([no, nama, hari, "Rp " + gaji.toLocaleString('id-ID'), "Kenek"]);
       no++;
     }
 
-    // Tabel
     doc.autoTable({
       head: [['No.', 'Nama', 'Hari Kerja', 'Gaji (Rp)', 'Keterangan']],
       body: tableData,
@@ -199,12 +176,10 @@
       styles: { font: "courier", fontSize: 11 }
     });
 
-    // Total
     const finalY = doc.lastAutoTable.finalY || 55;
     doc.setFontSize(12);
     doc.text(`TOTAL GAJI: Rp ${total.toLocaleString('id-ID')}`, 14, finalY + 10);
 
-    // Format tanggal ke ddmmyyyy
     let fileTanggal = "tanpa-tanggal";
     if (tanggal) {
       const [yyyy, mm, dd] = tanggal.split("-");
