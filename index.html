@@ -21,8 +21,12 @@
   <input type="date" id="tanggal" required>
 </label>
 
-<label>Nama Proyek:
-  <input type="text" id="proyek" required>
+<label>Proyek:
+  <select id="proyek">
+    <option value="Rumah A">Rumah A</option>
+    <option value="Rumah B">Rumah B</option>
+    <option value="Rumah C">Rumah C</option>
+  </select>
 </label>
 
 <label>Jumlah Tukang:
@@ -45,8 +49,8 @@
 <button onclick="downloadPDF()">Download PDF</button>
 
 <script>
-  const gajiPerHariTukang = 150000;
-  const gajiPerHariKenek = 100000;
+  const gajiPerHariTukang = 200000;
+  const gajiPerHariKenek = 1500000;
   let hasilText = "";
 
   function buatFormTukangDanKenek() {
